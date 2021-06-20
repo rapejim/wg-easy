@@ -17,6 +17,7 @@ new Vue({
     clientDelete: null,
     clientCreate: null,
     clientCreateName: '',
+    clientCreateNumber: '',
     qrcode: null,
   },
   methods: {
@@ -33,6 +34,12 @@ new Vue({
       if (!this.authenticated) return;
 
       const clients = await this.api.getClients();
+
+      // Sort clients by last IP number
+      clients.sort((clientA, clientB) => {
+        return +clientA.address.split('.').pop() - +clientB.address.split('.').pop();
+      });
+
       this.clients = clients.map(client => {
         if (client.name.includes('@') && client.name.includes('.')) {
           client.avatar = `https://www.gravatar.com/avatar/${md5(client.name)}?d=blank`;
@@ -80,9 +87,10 @@ new Vue({
     },
     createClient() {
       const name = this.clientCreateName;
+      const number = this.clientCreateNumber;
       if (!name) return;
 
-      this.api.createClient({ name })
+      this.api.createClient({ name, number })
         .catch(err => alert(err.message || err.toString()))
         .finally(() => this.refresh().catch(console.error));
     },
